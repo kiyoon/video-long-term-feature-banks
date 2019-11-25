@@ -1,3 +1,9 @@
+## Kiyoon changes
+
+`dataset_tools/epic/extract_epic_frames.sh`
+
+Changed the script so that you can process in parallel (folder by folder)
+
 ## Long-Term Feature Banks for Detailed Video Understanding ##
 
 [Chao-Yuan Wu](https://www.cs.utexas.edu/~cywu/),

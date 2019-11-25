@@ -15,16 +15,20 @@
 # limitations under the License.
 ##############################################################################
 
-IN_DATA_DIR="../../data/epic/videos"
-OUT_DATA_DIR="../../data/epic/frames"
+IN_DATA_DIR="/disk/scratch_fast/kiyoon/datasets/epic/videos/$1"
+OUT_DATA_DIR="/disk/scratch_fast/kiyoon/datasets/epic/frames"
 
 if [[ ! -d "${OUT_DATA_DIR}" ]]; then
   echo "${OUT_DATA_DIR} doesn't exist. Creating it.";
   mkdir -p ${OUT_DATA_DIR}
 fi
 
-for video in $(ls -A1 -U ${IN_DATA_DIR}/*/*MP4)
+log_file="logs/${1/\//_}.log"
+> "$log_file"
+
+for video in $(find ${IN_DATA_DIR} -name "*.MP4" | sort)
 do
+  echo "$video" >> "$log_file"
   video_name=${video##*/}
   video_name=${video_name::-4}
   person=${video_name::-3}
@@ -36,3 +40,5 @@ do
 
   ffmpeg -i "${video}" -vf scale=-1:340 -r 30 -q:v 1 "${out_name}"
 done
+
+echo "end" >> "$log_file"
