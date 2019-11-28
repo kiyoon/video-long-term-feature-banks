@@ -43,12 +43,14 @@ source activate video-lfb
 
 conda install numpy pyyaml mkl mkl-include setuptools cmake cffi typing
 conda install -c pytorch magma-cuda90
+conda install -c anaconda cudatoolkit=9.0 nccl
 
 git clone --recursive https://github.com/pytorch/pytorch
 cd pytorch
 rm -r caffe2/videos
 cp -r [path to video-long-term-feature-banks]/caffe2_customized_ops/video caffe2/
 
+export PYTHONPATH=/path/to/video-long-term-feature-banks/lib:$PYTHONPATH
 export CMAKE_PREFIX_PATH=${CONDA_PREFIX:-"$(dirname $(which conda))/../"}
 export CUDNN_LIB_DIR=[path to cnDNN]/lib64
 export CUDNN_INCLUDE_DIR=[path to cnDNN]/include
