@@ -44,15 +44,19 @@ source activate video-lfb
 conda install numpy pyyaml mkl mkl-include setuptools cmake cffi typing
 conda install -c pytorch magma-cuda90
 # install nccl by source, if not installed globally
-git clone https://github.com/NVIDIA/nccl.git
-cd nccl
-make src.build CUDA_HOME=<path to cuda install> -j 20
-cp -r build/include/* $CONDA_PREFIX/include
-cp -r build/lib/* $CONDA_PREFIX/lib
-cd ..
+# UPDATE: maybe we don't need to as PyTorch compiles nccl by default
+#git clone https://github.com/NVIDIA/nccl.git
+#cd nccl
+#make src.build CUDA_HOME=<path to cuda install> -j 20
+#cp -r build/include/* $CONDA_PREFIX/include
+#cp -r build/lib/* $CONDA_PREFIX/lib
+#cd ..
 
 git clone --recursive https://github.com/pytorch/pytorch
 cd pytorch
+git checkout v1.3.1
+git submodule sync
+git submodule update --init --recursive
 rm -r caffe2/videos
 cp -r [path to video-long-term-feature-banks]/caffe2_customized_ops/video caffe2/
 
