@@ -43,7 +43,13 @@ source activate video-lfb
 
 conda install numpy pyyaml mkl mkl-include setuptools cmake cffi typing
 conda install -c pytorch magma-cuda90
-conda install -c anaconda cudatoolkit=9.0 nccl
+# install nccl by source, if not installed globally
+git clone https://github.com/NVIDIA/nccl.git
+cd nccl
+make src.build CUDA_HOME=<path to cuda install> -j 20
+cp -r build/include/* $CONDA_PREFIX/include
+cp -r build/lib/* $CONDA_PREFIX/lib
+cd ..
 
 git clone --recursive https://github.com/pytorch/pytorch
 cd pytorch
@@ -52,8 +58,9 @@ cp -r [path to video-long-term-feature-banks]/caffe2_customized_ops/video caffe2
 
 export PYTHONPATH=/path/to/video-long-term-feature-banks/lib:$PYTHONPATH
 export CMAKE_PREFIX_PATH=${CONDA_PREFIX:-"$(dirname $(which conda))/../"}
-export CUDNN_LIB_DIR=[path to cnDNN]/lib64
-export CUDNN_INCLUDE_DIR=[path to cnDNN]/include
+export CUDA_HOME=[path to CUDA 9.0]
+#export CUDNN_LIB_DIR=[path to cnDNN]/lib64
+#export CUDNN_INCLUDE_DIR=[path to cnDNN]/include
 python2 setup.py install
 
 conda install --yes protobuf
