@@ -82,4 +82,7 @@ pip install sklearn
 
 # Before importing torch, you need to have this variable setup
 export LD_LIBRARY_PATH=[path to cuDNN]/lib64:$LD_LIBRARY_PATH
+
+# Before running the test code, you need this variable setup
+export PYTHONPATH=/path/to/video-long-term-feature-banks/lib:$PYTHONPATH
 ```
