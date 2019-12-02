@@ -66,8 +66,8 @@ export CMAKE_PREFIX_PATH=${CONDA_PREFIX:-"$(dirname $(which conda))/../"}
 export CUDA_HOME=[path to CUDA 9.0]
 
 # These seem to not work with PyTorch 1.3 or higher. They probably changed how they search the cuDNN library.
-export CUDNN_LIB_DIR=[path to cnDNN]/lib64
-export CUDNN_INCLUDE_DIR=[path to cnDNN]/include
+export CUDNN_LIB_DIR=[path to cuDNN]/lib64
+export CUDNN_INCLUDE_DIR=[path to cuDNN]/include
 export TORCH_CUDA_ARCH_LIST=7.0		# see your GPU's compute capability (architecture). It will not only remove errors that happens in the older architecture, but also increases the compilation speed a lot.
 # You can also specify the exact cuDNN library location
 #export CUDNN_LIBRARY="$CUDNN_LIB_DIR/libcudnn.so"
@@ -78,4 +78,8 @@ conda install --yes future
 conda install --yes networkx
 pip install enum34
 pip install sklearn
+
+
+# Before importing torch, you need to have this variable setup
+export LD_LIBRARY_PATH=[path to cuDNN]/lib64:$LD_LIBRARY_PATH
 ```
