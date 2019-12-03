@@ -4,6 +4,8 @@
 
 Changed the script so that you can process in parallel (folder by folder)
 
+Install instructions (INSTALL.md) changed.
+
 ## Long-Term Feature Banks for Detailed Video Understanding ##
 
 [Chao-Yuan Wu](https://www.cs.utexas.edu/~cywu/),
