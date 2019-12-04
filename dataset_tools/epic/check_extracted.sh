@@ -12,15 +12,15 @@ trainval_csv="$2"
 
 trainval=$(cat "$trainval_csv" | sed 1d)
 num_files=$(echo "$trainval" | wc -l)
+id=1
 
 #bash_start_time=$(date +%s.%N)
 
 while read line
 do
-	id=$(echo "$line" | awk '{print $3}')
 	filename=$(echo "$line" | awk '{print $4}')
 
-	>&2 echo $((id + 1)) / $num_files
+	>&2 echo ${id} / $num_files
 	
 	if [ ! -f "$input_dir/$filename" ]; then
 	    echo "$input_dir/$filename"
@@ -30,4 +30,5 @@ do
 	#time_diff=$(echo "$bash_end_time - $bash_start_time" | bc)
 	#average_time=$(echo "$time_diff / ($id+1)" | bc -l)
 	#echo "average processing time per file: $average_time"
+	(( id++ ))
 done <<< "$trainval"
