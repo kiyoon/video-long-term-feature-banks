@@ -46,9 +46,13 @@ import matplotlib.pyplot as plt
 import seaborn as sn
 import pandas as pd
 
-NOUN_CLASSES = range(352)
-VERB_CLASSES = range(125)
 
+NUM_NOUN_CLASS = 352
+NUM_VERB_CLASS = 125
+NOUN_CLASSES = range(NUM_NOUN_CLASS)
+VERB_CLASSES = range(NUM_VERB_CLASS)
+
+TRAINING_DATA = ['P' + x.zfill(2) for x in map(str, range(1, 26))]  # P01 to P25
 
 def compute_top_k_verbs_or_nouns(scores, labels, K):
     """Compute top-k accuracy for verbs or nouns."""
@@ -69,6 +73,19 @@ def softmax(x):
     assert len(x.shape) == 2
     e_x = np.exp(x - np.max(x, axis=1, keepdims=True))
     return e_x / e_x.sum(axis=1, keepdims=True)
+
+
+def count_train_class_frequency(args):
+    num_class = NUM_NOUN_CLASS if args.verb_or_noun == 'noun' else NUM_VERB_CLASS
+    classname = args.verb_or_noun + '_class'
+
+    with open(os.path.join(args.annotation_root, 'EPIC_train_action_labels.pkl'), 'rb') as f:
+        df = pkl.load(f)
+
+    training_mask = np.isin(df['participant_id'], TRAINING_DATA)
+    class_frequency = np.bincount(df[classname][training_mask], minlength=num_class)
+    return class_frequency
+
 
 
 def save_confusion_matrix(args):
@@ -92,15 +109,35 @@ def save_confusion_matrix(args):
     
     pred_labels = np.argmax(verbnoun_pred, axis=1)
     cm = confusion_matrix(verbnoun_labels, pred_labels, labels = class_indices)
-    if args.normalise:
-        cm = normalize(cm, axis=1, norm='l1')     # row (true labels) will sum to 1.
+    class_frequency_in_train = count_train_class_frequency(args)
 
-    sort_labels = cm.diagonal().argsort()[::-1]
+    if args.sort_method == 'val_class_frequency':
+        # sort by class frequency in validation data
+        num_samples_per_target = cm.sum(axis=1)
+        sort_labels = num_samples_per_target.argsort()[::-1]
+
+    elif args.sort_method == 'train_class_frequency':
+        # sort by class frequency in training data
+        sort_labels = class_frequency_in_train.argsort()[::-1]
+
+    else:
+        # sort by accuracy per class
+        cm = normalize(cm, axis=1, norm='l1')     # row (true labels) will sum to 1.
+        sort_labels = cm.diagonal().argsort()[::-1]
+
     cm_sorted = confusion_matrix(verbnoun_labels, pred_labels, labels = sort_labels)
-    num_samples_per_target = cm_sorted.sum(axis=1)
+    num_samples_per_target = cm_sorted.sum(axis=1)  # class frequency in val
     num_correct_pred_per_target = cm_sorted.diagonal()
+    class_frequency_in_train = class_frequency_in_train[sort_labels]
+
     if args.normalise:
         cm_sorted = normalize(cm_sorted, axis=1, norm='l1')     # row (true labels) will sum to 1.
+
+    # Generate visualisation and summary files
+
+    out_dir = 'sort_%s' % args.sort_method
+    if not os.path.exists(out_dir):
+        os.makedirs(out_dir)
 
     df_cm = pd.DataFrame(cm_sorted, class_labels[sort_labels],
                               class_labels[sort_labels])
@@ -120,15 +157,15 @@ def save_confusion_matrix(args):
 
     fig.set_tight_layout(True)
 
-    plt.savefig('confusion_%s.pdf' % args.verb_or_noun)
+    plt.savefig('%s/confusion_%s.pdf' % (out_dir, args.verb_or_noun))
 
-    with open('per_class_%s_accuracy.csv' % args.verb_or_noun, mode='w') as csvfile:
+    with open('%s/per_class_%s_accuracy.csv' % (out_dir, args.verb_or_noun), mode='w') as csvfile:
 	csvwriter = csv.writer(csvfile, delimiter=str(','), quotechar=str('"'), quoting=csv.QUOTE_MINIMAL)
 
-	csvwriter.writerow(['class_key', 'accuracy (%)', 'num_correct_pred', 'num_samples_in_target'])
+	csvwriter.writerow(['class_key', 'accuracy (%)', 'num_correct_pred', 'num_samples_in_val', 'num_samples_in_train'])
 
-        for class_label, num_correct_pred, num_samples_in_target in zip(class_labels[sort_labels], num_correct_pred_per_target, num_samples_per_target):
-            csvwriter.writerow([class_label, float(num_correct_pred) / num_samples_in_target * 100 if num_samples_in_target != 0 else 'NaN', num_correct_pred, num_samples_in_target])
+        for class_label, num_correct_pred, num_samples_in_val, num_samples_in_train in zip(class_labels[sort_labels], num_correct_pred_per_target, num_samples_per_target, class_frequency_in_train):
+            csvwriter.writerow([class_label, float(num_correct_pred) / num_samples_in_val * 100 if num_samples_in_val != 0 else 'NaN', num_correct_pred, num_samples_in_val, num_samples_in_train])
 
     
     for K in [1, 5]:
@@ -145,6 +182,8 @@ def main():
         '--verb_or_noun', type=str, required=True, choices=['verb', 'noun'], help='Is it verb or noun?')
     parser.add_argument(
         '--no-normalise', action='store_false', dest='normalise', help='Do not normalise the confusion matrix')
+    parser.add_argument(
+        '--sort_method', type=str, default='train_class_frequency', choices=['train_class_frequency', 'val_class_frequency', 'val_per_class_accuracy'], help='Sorting method')
     parser.add_argument(
         '--annotation_root', type=str, default='data/epic/annotations',
         help='Path to EPIC-Kitchens annotation folder.')
