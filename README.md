@@ -4,7 +4,12 @@
 
 Changed the script so that you can process in parallel (folder by folder)
 
-Install instructions (INSTALL.md) changed.
+`tools/generate_confusion_matrix.py`
+
+This will generate confusion matrices (PDF) and per-class accuracy tables (CSV).
+
+
+Also, the installation instructions (INSTALL.md) have changed.
 
 ## Long-Term Feature Banks for Detailed Video Understanding ##
 
